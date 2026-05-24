@@ -31,3 +31,11 @@ export function normalizeAiJsonOutput<T>(raw: string, schema: z.ZodType<T>, fall
 	const result = schema.safeParse(parsed);
 	return result.success ? result.data : fallback;
 }
+
+export function normalizeAiJsonOutputWithStatus<T>(raw: string, schema: z.ZodType<T>, fallback: T): { data: T; valid: boolean } {
+	const parsed = extractJsonObject(raw);
+	const result = schema.safeParse(parsed);
+	return result.success
+		? { data: result.data, valid: true }
+		: { data: fallback, valid: false };
+}

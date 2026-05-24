@@ -6,6 +6,7 @@ import { summaryRoute } from './routes/summary';
 import { translateRoute } from './routes/translate';
 import { suggestRoute } from './routes/suggest';
 import { studyRoute } from './routes/study';
+import { deepDiveRoute } from './routes/deep-dive';
 import type { Bindings } from './types';
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -18,6 +19,7 @@ app.route('/', summaryRoute);
 app.route('/', translateRoute);
 app.route('/', suggestRoute);
 app.route('/', studyRoute);
+app.route('/', deepDiveRoute);
 
 app.onError((err, c) => {
 	log('Unhandled error', { error: String(err), stack: err.stack });

@@ -3,6 +3,7 @@ import { parseBlockNoteToPlainText } from './blocknote';
 import type {
 	AiMessage,
 	ChangeSummary,
+	ConceptDeepDiveRequest,
 	DetectStruggleRequest,
 	GenerateStudyReplayRequest,
 	StudyExplanationRequest,
@@ -144,4 +145,54 @@ ${versionText}
 
 Struggle moments:
 ${struggleText || 'none'}`.slice(0, MAX_REPLAY_CONTEXT_LENGTH);
+}
+
+export function buildConceptDeepDivePrompt(
+	input: ConceptDeepDiveRequest,
+	documentContext: string,
+	replayDigest: string,
+): AiMessage[] {
+	const advancedInstruction = input.depth === 'advanced' || input.depth === 'research'
+		? 'Generate advanced follow-up questions that require reasoning, not recall.'
+		: 'Generate practical follow-up questions that build understanding.';
+	const researchInstruction = input.depth === 'research'
+		? 'Include research-style directions as search queries only. Do not invent papers, URLs, videos, or citations.'
+		: 'If research directions are requested, return search queries only. Do not invent papers, URLs, videos, or citations.';
+
+	return [
+		{
+			role: 'system',
+			content: `You generate Tandaan Concept Deep Dive reports from project history.
+This is not a chatbot. It is a structured deep-learning report from document history, replay checkpoints, team debate, and edit friction signals.
+Ground every claim only in the provided document, replay digest, and team debate.
+Do not invent papers, URLs, videos, citations, private facts, or unstated events.
+Do not use medical, psychological, diagnostic, or personal judgment language.
+Use neutral wording such as "This section may show uncertainty around", "The replay suggests this concept needed more attention", or "The document history shows repeated revision around".
+Frame the value as: "Your project history becomes your mastery path."
+Prefer concise but useful explanations.
+${advancedInstruction}
+${researchInstruction}
+Produce valid JSON only with this exact shape:
+{"concept":"string","subject":"string optional","masteryLevel":"foundational|developing|advanced","confidence":number,"whyThisConceptMatters":"string","whereItAppeared":[{"versionId":"string","reason":"string","evidence":["string"]}],"groundedExplanation":{"shortExplanation":"string","deeperExplanation":"string","projectSpecificConnection":"string","simpleExample":"string"},"misconceptionCheck":[{"misconception":"string","whyItIsWrong":"string","howToFixThinking":"string"}],"deepQuestions":[{"question":"string","whyThisQuestionMatters":"string","expectedReasoningPath":["string"]}],"practiceQuestions":[{"difficulty":"easy|medium|hard","question":"string","answerGuide":"string"}],"researchDirections":[{"title":"string","whyExploreThis":"string","searchQuery":"string"}],"nextStudyStep":"string","tokensUsed":number optional}`,
+		},
+		{
+			role: 'user',
+			content: `Feature: Concept Deep Dive
+Document: ${input.documentId}
+Concept: ${input.concept}
+Subject: ${input.subject ?? 'unknown'}
+Assignment: ${input.assignmentTitle ?? 'unknown'}
+Student level: ${input.studentLevel}
+Depth: ${input.depth}
+Options: ${JSON.stringify(input.options ?? {})}
+
+Document context:
+${documentContext}
+
+Compact replay digest:
+${replayDigest}
+
+Generate a personalized deep-learning report for this concept. If the evidence is thin, lower confidence and say what the next study step should verify.`,
+		},
+	];
 }

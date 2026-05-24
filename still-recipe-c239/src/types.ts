@@ -102,3 +102,91 @@ export type StudyReplayResponse = {
 		task: string;
 	}>;
 };
+
+export type ConceptDeepDiveDepth = 'standard' | 'advanced' | 'research';
+export type MasteryLevel = 'foundational' | 'developing' | 'advanced';
+export type StruggleSignal =
+	| 'repeated_rewrite'
+	| 'deleted_definition'
+	| 'comment_question'
+	| 'long_pause'
+	| 'multi_contributor_edit'
+	| 'large_revision';
+
+export type ConceptDeepDiveRequest = {
+	documentId: string;
+	concept: string;
+	subject?: string;
+	assignmentTitle?: string;
+	studentLevel: StudentLevel;
+	depth: ConceptDeepDiveDepth;
+	documentContext: string;
+	replayContext: {
+		versions: Array<{
+			versionId: string;
+			timestamp: string;
+			content: string;
+			aiNarrative?: string;
+			summary?: ChangeSummary;
+		}>;
+		struggleSignals?: Array<{
+			versionId: string;
+			signal: StruggleSignal;
+			evidence: string[];
+		}>;
+		teamDebate?: Array<{
+			authorName?: string;
+			text: string;
+			timestamp?: string;
+		}>;
+	};
+	options?: {
+		includePracticeQuestions?: boolean;
+		includeMisconceptions?: boolean;
+		includeResearchDirections?: boolean;
+		includeExternalSearchQueries?: boolean;
+	};
+};
+
+export type ConceptDeepDiveResponse = {
+	concept: string;
+	subject?: string;
+	masteryLevel: MasteryLevel;
+	confidence: number;
+	whyThisConceptMatters: string;
+	whereItAppeared: Array<{
+		versionId: string;
+		reason: string;
+		evidence: string[];
+	}>;
+	groundedExplanation: {
+		shortExplanation: string;
+		deeperExplanation: string;
+		projectSpecificConnection: string;
+		simpleExample: string;
+	};
+	misconceptionCheck: Array<{
+		misconception: string;
+		whyItIsWrong: string;
+		howToFixThinking: string;
+	}>;
+	deepQuestions: Array<{
+		question: string;
+		whyThisQuestionMatters: string;
+		expectedReasoningPath: string[];
+	}>;
+	practiceQuestions: Array<{
+		difficulty: 'easy' | 'medium' | 'hard';
+		question: string;
+		answerGuide: string;
+	}>;
+	researchDirections: Array<{
+		title: string;
+		whyExploreThis: string;
+		searchQuery: string;
+	}>;
+	nextStudyStep: string;
+	tokensUsed?: number;
+	processingTime: number;
+	cached?: boolean;
+};

@@ -119,3 +119,95 @@ export const studyReplayResponseSchema = z.object({
 		task: z.string(),
 	})).min(1).max(5),
 });
+
+export const conceptDeepDiveDepthSchema = z.enum(['standard', 'advanced', 'research']);
+export const masteryLevelSchema = z.enum(['foundational', 'developing', 'advanced']);
+export const struggleSignalSchema = z.enum([
+	'repeated_rewrite',
+	'deleted_definition',
+	'comment_question',
+	'long_pause',
+	'multi_contributor_edit',
+	'large_revision',
+]);
+
+export const conceptDeepDiveRequestSchema = z.object({
+	documentId: z.string().min(1).max(200),
+	concept: z.string().min(1).max(120),
+	subject: z.string().max(120).optional(),
+	assignmentTitle: z.string().max(200).optional(),
+	studentLevel: z.enum(['beginner', 'intermediate', 'advanced']),
+	depth: conceptDeepDiveDepthSchema,
+	documentContext: z.string().min(1),
+	replayContext: z.object({
+		versions: z.array(z.object({
+			versionId: z.string().min(1).max(200),
+			timestamp: z.string().datetime(),
+			content: z.string().min(1),
+			aiNarrative: z.string().max(1000).optional(),
+			summary: changeSummarySchema.optional(),
+		})).min(1).max(100),
+		struggleSignals: z.array(z.object({
+			versionId: z.string().min(1).max(200),
+			signal: struggleSignalSchema,
+			evidence: z.array(z.string().max(500)).max(10),
+		})).max(100).optional(),
+		teamDebate: z.array(z.object({
+			authorName: z.string().max(120).optional(),
+			text: z.string().min(1).max(1000),
+			timestamp: z.string().datetime().optional(),
+		})).max(50).optional(),
+	}),
+	options: z.object({
+		includePracticeQuestions: z.boolean().optional(),
+		includeMisconceptions: z.boolean().optional(),
+		includeResearchDirections: z.boolean().optional(),
+		includeExternalSearchQueries: z.boolean().optional(),
+	}).optional(),
+});
+
+export const conceptDeepDiveAiResponseSchema = z.object({
+	concept: z.string(),
+	subject: z.string().optional(),
+	masteryLevel: masteryLevelSchema,
+	confidence: z.number().min(0).max(1),
+	whyThisConceptMatters: z.string(),
+	whereItAppeared: z.array(z.object({
+		versionId: z.string(),
+		reason: z.string(),
+		evidence: z.array(z.string()).max(5),
+	})).max(8),
+	groundedExplanation: z.object({
+		shortExplanation: z.string(),
+		deeperExplanation: z.string(),
+		projectSpecificConnection: z.string(),
+		simpleExample: z.string(),
+	}),
+	misconceptionCheck: z.array(z.object({
+		misconception: z.string(),
+		whyItIsWrong: z.string(),
+		howToFixThinking: z.string(),
+	})).max(3),
+	deepQuestions: z.array(z.object({
+		question: z.string(),
+		whyThisQuestionMatters: z.string(),
+		expectedReasoningPath: z.array(z.string()).min(1).max(5),
+	})).min(1).max(3),
+	practiceQuestions: z.array(z.object({
+		difficulty: z.enum(['easy', 'medium', 'hard']),
+		question: z.string(),
+		answerGuide: z.string(),
+	})).max(5),
+	researchDirections: z.array(z.object({
+		title: z.string(),
+		whyExploreThis: z.string(),
+		searchQuery: z.string(),
+	})).max(5),
+	nextStudyStep: z.string(),
+	tokensUsed: z.number().int().min(0).optional(),
+});
+
+export const conceptDeepDiveResponseSchema = conceptDeepDiveAiResponseSchema.extend({
+	processingTime: z.number().int().min(0),
+	cached: z.boolean().optional(),
+});

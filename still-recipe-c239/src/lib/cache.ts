@@ -28,13 +28,13 @@ export async function getCachedJson<T>(env: Bindings, cacheKey: string, schema: 
 	}
 }
 
-export async function putCachedJson(env: Bindings, cacheKey: string, value: unknown) {
+export async function putCachedJson(env: Bindings, cacheKey: string, value: unknown, ttlSeconds = CACHE_TTL_SECONDS) {
 	if (!env.CACHE) {
 		return;
 	}
 
 	try {
-		await env.CACHE.put(cacheKey, JSON.stringify(value), { expirationTtl: CACHE_TTL_SECONDS });
+		await env.CACHE.put(cacheKey, JSON.stringify(value), { expirationTtl: ttlSeconds });
 	} catch {
 		// Cache is an optimization only.
 	}
