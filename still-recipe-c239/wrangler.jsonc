@@ -1,0 +1,10 @@
+{
+"$schema": "node_modules/wrangler/config-schema.json",
+"name": "tandaan-replay-ai",
+"main": "src/index.ts",
+"compatibility_date": "2025-10-29",
+"observability": { "enabled": true },
+"placement": { "mode": "smart" },
+"ai": { "binding": "AI" },
+"vars": { "ALLOWED_ORIGIN": "https://tandaan.app" }
+}
